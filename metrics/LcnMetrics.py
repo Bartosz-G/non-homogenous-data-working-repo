@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+import time
 
 from torcheval.metrics import BinaryAUROC
 from torcheval.metrics import BinaryAccuracy
@@ -323,5 +324,16 @@ class LcnMetricsRegression():
             else:
                 final_metrics = {'metrics': metrics}
 
-            # return test_loss, test_score
+
             return final_metrics
+
+
+
+def timer_decorator(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        print(f"The function took {end_time - start_time} seconds to execute.")
+        return result
+    return wrapper
