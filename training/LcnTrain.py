@@ -83,15 +83,22 @@ def train(args, model, device, train_loader, optimizer, epoch, anneal, alpha=1):
         loss.backward()
         optimizer.step()
 
+        # NaN early stopping
+        if torch.isnan(loss.item()):
+            train_loss = None
+            break
+
         if args.task == 'classification':
             train_loss += loss.item()
         elif args.task == 'regression':
             train_loss += loss.item() * len(target)
+    else:
+        train_loss /= dataset_len
 
-    train_loss /= dataset_len
+        final_metric = {'train_loss': train_loss}
+        return final_metric
 
-    final_metric = {'train_loss':train_loss}
-    return final_metric
+    return train_loss
 
 
 
