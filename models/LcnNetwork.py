@@ -181,7 +181,7 @@ class Net(nn.Module):
 
 
 def init_LcnNetwork(depth, seed, drop_type, p, ensemble_n, shrinkage, back_n, net_type, hidden_dim, anneal,
-                 optimizer, batch_size, epochs, lr, momentum, no_cuda, lr_step_size, gamma, task, input_dim, output_dim)
+                    optimizer, batch_size, epochs, lr, momentum, no_cuda, lr_step_size, gamma, task, input_dim, output_dim):
     if anneal == 'approx':
         net_type = 'approx_' + net_type
 
