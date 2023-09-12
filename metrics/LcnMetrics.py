@@ -35,9 +35,14 @@ class LcnMetricsClassification():
         pass
 
     # @timer_decorator
-    def get_loss(self, model, test_loader, device, test_set_name=None):
+    def get_loss(self, model, test_loader, hyperparameters, test_set_name=None):
         if test_set_name:
             assert isinstance(test_set_name, str), "test_set_name must be a string, such as train, val, test"
+            
+            
+        no_cuda = hyperparameters['no_cuda']    
+        use_cuda = not no_cuda and torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
 
         with torch.no_grad():
             model.eval()
@@ -72,9 +77,13 @@ class LcnMetricsClassification():
 
             return final_metrics
 
-    def get_metrics(self, model, test_loader, device, test_set_name=None):
+    def get_metrics(self, model, test_loader, hyperparameters, test_set_name=None):
         if test_set_name:
             assert isinstance(test_set_name, str), "test_set_name must be a string, such as train, val, test"
+            
+        no_cuda = hyperparameters['no_cuda']    
+        use_cuda = not no_cuda and torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
 
         with torch.no_grad():
             model.eval()
@@ -132,9 +141,13 @@ class LcnMetricsClassification():
             return final_metrics
 
     #@timer_decorator
-    def get_all(self, model, test_loader, device, test_set_name=None):
+    def get_all(self, model, test_loader, hyperparameters, test_set_name=None):
         if test_set_name:
             assert isinstance(test_set_name, str), "test_set_name must be a string, such as train, val, test"
+            
+        no_cuda = hyperparameters['no_cuda']    
+        use_cuda = not no_cuda and torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
 
         with torch.no_grad():
             model.eval()
@@ -198,9 +211,13 @@ class LcnMetricsRegression():
         self.quantiles = quantiles
 
     # @timer_decorator
-    def get_all(self, model, test_loader, device, test_set_name=None):
+    def get_all(self, model, test_loader, hyperparameters, test_set_name=None):
         if test_set_name:
             assert isinstance(test_set_name, str), "test_set_name must be a string, such as train, val, test"
+            
+        no_cuda = hyperparameters['no_cuda']    
+        use_cuda = not no_cuda and torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
 
         with torch.no_grad():
             model.eval()
@@ -263,9 +280,13 @@ class LcnMetricsRegression():
             # return test_loss, test_score
             return final_metrics
 
-    def get_metrics(self, model, test_loader, device, test_set_name=None):
+    def get_metrics(self, model, test_loader, hyperparameters, test_set_name=None):
         if test_set_name:
             assert isinstance(test_set_name, str), "test_set_name must be a string, such as train, val, test"
+            
+        no_cuda = hyperparameters['no_cuda']    
+        use_cuda = not no_cuda and torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
 
         with torch.no_grad():
             model.eval()

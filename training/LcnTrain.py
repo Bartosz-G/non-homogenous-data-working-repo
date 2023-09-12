@@ -62,7 +62,7 @@ class LcnTrainingRoutine():
         self.net_type = net_type
         self.hidden_dim = hidden_dim
         self.anneal = anneal
-        self.optimizer = optimizer
+        self.optimizer_str = optimizer
         self.batch_size = batch_size
         self.total_epochs = epochs
         self.lr = lr
@@ -71,21 +71,21 @@ class LcnTrainingRoutine():
         self.lr_step_size = lr_step_size
         self.gamma = gamma
         self.task = task
-        self.optimizer_obj = None
+        self.optimizer = None
         self.scheduler = None
 
         use_cuda = not no_cuda and torch.cuda.is_available()
         self.device = torch.device("cuda" if use_cuda else "cpu")
 
-        self.epoch = None
+        self.epoch = 0
 
 
 
     def get_optimizer_scheduler(self, model):
-        if self.optimizer == 'SGD':
-            self.optimizer_obj = torch.optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, nesterov=True)
-        elif self.optimizer == 'AMSGrad':
-            self.optimizer_obj = torch.optim.Adam(model.parameters(), lr=self.lr, amsgrad=True)
+        if self.optimizer_str == 'SGD':
+            self.optimizer = torch.optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, nesterov=True)
+        elif self.optimizer_str == 'AMSGrad':
+            self.optimizer = torch.optim.Adam(model.parameters(), lr=self.lr, amsgrad=True)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer_obj, step_size=self.lr_step_size, gamma=self.gamma)
 
     def scheduler_step(self, epoch):
@@ -99,7 +99,7 @@ class LcnTrainingRoutine():
 
 
     def train(self, model, train_loader):
-        alpha = get_alpha(self.epoch, self.epochs)
+        alpha = get_alpha(self.epoch, self.total_epochs)
         model.train()
         dataset_len = 0
         train_loss = 0
