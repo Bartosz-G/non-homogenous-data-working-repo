@@ -81,7 +81,7 @@ class LcnTrainingRoutine():
 
 
 
-    def get_optimizer_scheduler(self, model):
+    def set_optimizer_scheduler(self, model):
         if self.optimizer_str == 'SGD':
             self.optimizer = torch.optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, nesterov=True)
         elif self.optimizer_str == 'AMSGrad':
@@ -89,9 +89,6 @@ class LcnTrainingRoutine():
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer_obj, step_size=self.lr_step_size, gamma=self.gamma)
 
     def scheduler_step(self, epoch):
-        if self.optimizer is None:
-            self.get_optimizer_scheduler()
-
         if self.scheduler is not None:
             self.scheulder.step(epoch)
 
