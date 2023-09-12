@@ -90,7 +90,7 @@ class LcnTrainingRoutine():
 
     def scheduler_step(self, epoch):
         if self.scheduler is not None:
-            self.scheulder.step(epoch)
+            self.scheduler.step(epoch)
 
         self.epoch = epoch
 
@@ -134,7 +134,7 @@ class LcnTrainingRoutine():
             self.optimizer.step()
 
             # NaN early stopping
-            if torch.isnan(loss.item()):
+            if torch.isnan(loss):
                 train_loss = None
                 break
 

@@ -246,8 +246,12 @@ class LcnMetricsRegression():
 
             test_loss /= dataset_len
 
-            standard_errors_tensor = torch.cat(standard_errors_list, dim=1)
-            all_targets = torch.cat(target_list, dim=1)
+            standard_errors_tensor = torch.cat(standard_errors_list, dim=0)
+            all_targets = torch.cat(target_list, dim=0)
+
+            
+            standard_errors_tensor = torch.squeeze(standard_errors_tensor)
+            all_targets = torch.squeeze(all_targets)
 
             ss_res = torch.sum(standard_errors_tensor)
             target_mean = torch.mean(all_targets)
@@ -315,8 +319,12 @@ class LcnMetricsRegression():
 
             test_loss /= dataset_len
 
-            standard_errors_tensor = torch.cat(standard_errors_list, dim=1)
-            all_targets = torch.cat(target_list, dim=1)
+            standard_errors_tensor = torch.cat(standard_errors_list, dim=0)
+            all_targets = torch.cat(target_list, dim=0)
+
+            
+            standard_errors_tensor = torch.squeeze(standard_errors_tensor)
+            all_targets = torch.squeeze(all_targets)
 
             ss_res = torch.sum(standard_errors_tensor)
             target_mean = torch.mean(all_targets)
