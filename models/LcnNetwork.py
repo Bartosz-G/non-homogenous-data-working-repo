@@ -3,8 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-def get_alpha(epoch, total_epoch):
-    return float(epoch) / float(total_epoch)
+
 
 def my_softplus(x, tau=1., threshold=20.):
     truncate_mask = (x > threshold).type(torch.cuda.FloatTensor)
@@ -181,3 +180,20 @@ class Net(nn.Module):
 
 
 
+def init_LcnNetwork(depth, seed, drop_type, p, ensemble_n, shrinkage, back_n, net_type, hidden_dim, anneal,
+                 optimizer, batch_size, epochs, lr, momentum, no_cuda, lr_step_size, gamma, task, input_dim, output_dim)
+    if anneal == 'approx':
+        net_type = 'approx_' + net_type
+
+    use_cuda = not no_cuda and torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda else "cpu")
+
+    return Net(input_dim = input_dim,
+            output_dim = output_dim,
+            hidden_dim = hidden_dim,
+            num_layer = depth,
+            num_back_layer = back_n,
+            dense = True,
+            drop_type = drop_type,
+            net_type = net_type,
+            approx = anneal).to(device)
