@@ -120,7 +120,7 @@ class LcnMetricsClassification():
                 acc_accumulator.update(preds, target_one_dim)
                 confusion_accumulator.update(preds, target_one_dim, num_classes=target.shape[1])
 
-            roc_auc = roc_auc_accumulator.compute().item()
+            roc_auc = roc_auc_accumulator.compute().mean().item()
             accuracy = acc_accumulator.compute().mean().item()
             confusion_matrix = confusion_accumulator.compute()
 
