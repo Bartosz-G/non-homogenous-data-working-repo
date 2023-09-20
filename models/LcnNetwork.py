@@ -183,6 +183,8 @@ class Net(nn.Module):
 def init_LcnNetwork(depth, seed, drop_type, p, ensemble_n, shrinkage, back_n, net_type, hidden_dim, anneal,
                     optimizer, batch_size, epochs, lr, momentum, no_cuda, lr_step_size, gamma, task, input_dim, output_dim):
 
+    drop_type_param = 'none' if p == 0 else 'node_dropconnect'
+
     use_cuda = not no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
@@ -192,6 +194,6 @@ def init_LcnNetwork(depth, seed, drop_type, p, ensemble_n, shrinkage, back_n, ne
             num_layer = depth,
             num_back_layer = back_n,
             dense = True,
-            drop_type = drop_type,
+            drop_type = drop_type_param,
             net_type = net_type,
             approx = anneal).to(device)

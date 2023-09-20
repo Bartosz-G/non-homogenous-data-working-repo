@@ -10,39 +10,6 @@ from sklearn.metrics import roc_auc_score
 
 
 
-# To be used as args parser from orchestrator
-class Hyperparams:
-    def __init__(self, depth, seed, drop_type, p, ensemble_n, shrinkage, back_n, net_type, hidden_dim, anneal,
-                 optimizer, batch_size, epochs, lr, momentum, no_cuda, lr_step_size, gamma, task):
-        self.depth = depth
-        self.seed = seed
-        self.drop_type = drop_type
-        self.p = p
-        self.ensemble_n = ensemble_n
-        self.shrinkage = shrinkage
-        self.back_n = back_n
-        self.net_type = net_type
-        self.hidden_dim = hidden_dim
-        self.anneal = anneal
-        self.optimizer = optimizer
-        self.batch_size = batch_size
-        self.epochs = epochs
-        self.lr = lr
-        self.momentum = momentum
-        self.no_cuda = no_cuda
-        self.lr_step_size = lr_step_size
-        self.gamma = gamma
-        self.task = task
-        self.input_dim = None
-        self.output_dim = None
-
-    def __bool__(self):
-        return True
-
-    def set_input_dims(self, input_dim, output_dim):
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-
 
 
 def get_alpha(epoch, total_epoch):
@@ -54,7 +21,7 @@ class LcnTrainingRoutine():
                  optimizer, batch_size, epochs, lr, momentum, no_cuda, lr_step_size, gamma, task, input_dim, output_dim):
         self.depth = depth
         self.seed = seed
-        self.drop_type = drop_type
+        self.drop_type = 'none' if p == 0 else 'node_dropconnect'
         self.p = p
         self.ensemble_n = ensemble_n
         self.shrinkage = shrinkage
