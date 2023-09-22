@@ -74,48 +74,49 @@ class DiscontinuityDense(nn.Module):
 
 class DiscontinuousNeuralNetwork(nn.Module):
     def __init__(self,
-                 activation,
-                 depth:int,
-                 input_dim:int,
-                 output_dim:int,
-                 n_units:int,
-                 d_units:int,
-                 embd_size = None,
-                 n_cat = None,
+                 input_dim,
+                 output_dim,
+                 hidden_units,
+                 discontinous_units,
+                 depth,
+                 activation=nn.ReLU,
+                 embd_size=None,
+                 n_cat=None,
                  dropout = None):
         super(DiscontinuousNeuralNetwork, self).__init__()
         assert (embd_size is None) or (embd_size is not None and isinstance(n_cat, int)), "n_cat must be an integer if embd_size is not None"
-        assert depth >= 3, "depth cannot be lower than 2"
+        assert depth >= 2, "depth cannot be lower than 2"
 
-        self.activation = activation  # PyTorch activation function like nn.ReLU()
 
-        if embd_size:
+        layers = []
+        self.embeds = None
+        last_output_dim = input_dim
+
+        # Add embedding layer if embd_size and n_cat are provided
+        if embd_size is not None and n_cat is not None:
             self.embeds = nn.Embedding(n_cat, embd_size)
-        else:
-            self.embeds = None
+            last_output_dim = input_dim - n_cat + embd_size  # Adjust input dimensions
 
-        if self.embeds is not None:
-            self.layers = nn.ModuleList([nn.Linear(input_dim - n_cat + embd_size, n_units)])
-            last_layer_dim = n_units
-
-            if dropout is not None:
-                self.layers.append(nn.Dropout(dropout))
-
-        else:
-            self.layers = nn.ModuleList([nn.Linear(input_dim, n_units)])
-            last_layer_dim = n_units
-
-            if dropout is not None:
-                self.layers.append(nn.Dropout(dropout))
-
+        # Input layer
         if depth >= 5:
-            self.layers.append(nn.Linear(last_layer_dim, n_units))
-            last_layer_dim = n_units
             depth = depth - 1
+            layers.append(nn.Linear(last_output_dim, hidden_units))
 
-            if dropout is not None:
-                self.layers.append(nn.Dropout(dropout))
+            if dropout is not None and 0 < dropout < 1:
+                layers.append(nn.Dropout(dropout))
 
+            layers.append(activation())
+            layers.append(nn.Linear(hidden_units, hidden_units))
+            last_output_dim = hidden_units
+
+        else:
+            layers.append(nn.Linear(last_output_dim, hidden_units))
+            last_output_dim = hidden_units
+
+        if dropout is not None and 0 < dropout < 1:
+            layers.append(nn.Dropout(dropout))
+
+        layers.append(activation())
 
         if depth >= 5:
             add_full_connected_at_the_end = True
@@ -124,124 +125,86 @@ class DiscontinuousNeuralNetwork(nn.Module):
             add_full_connected_at_the_end = False
 
 
-        for i in range(depth - 2):
-            self.layers.append(DiscontinuityDense(last_layer_dim, d_units, activation= self.activation))
-            last_layer_dim = d_units
+        for i in range(depth - 1):
+            layers.append(DiscontinuityDense(last_layer_dim, discontinous_units, activation= activation()))
+            last_layer_dim = discontinous_units
+
 
         if add_full_connected_at_the_end:
-            self.layers.append(nn.Linear(last_layer_dim, n_units))
-            last_layer_dim = n_units
+            layers.append(nn.Linear(last_output_dim, hidden_units))
+            last_layer_dim = hidden_units
 
-            if dropout is not None:
-                self.layers.append(nn.Dropout(dropout))
+            if dropout is not None and 0 < dropout < 1:
+                layers.append(nn.Dropout(dropout))
 
+            layers.append(activation())
 
-        self.output_layer = nn.Linear(last_layer_dim, output_dim)
+        # Output layer
 
+        layers.append(nn.Linear(last_output_dim,output_dim))
 
+        self.model = nn.Sequential(*layers)
 
+    def forward(self, x_cont, x_cat=None):
+        if self.embeds is not None and x_cat is not None:
+            x_cat = self.embeds(x_cat)
+            x = torch.cat([x_cont, x_cat], dim=1)
+        elif x_cat is not None:
+            x = torch.cat([x_cont, x_cat], dim=1)
+        else:
+            x = x_cont
 
-    def embed_forward(self, x_cont, x_cat):
-        assert self.embeds is not None, "for non_embedded output, use forward()"
-        x_cat_embed = self.embeds(x_cat)
-        x = torch.cat([x_cont, x_cat_embed], dim=1)
-
-        for layer in self.layers:
-            if isinstance(layer, nn.Linear):
-                x = self.activation(layer(x))
-            elif isinstance(layer, DiscontinuityDense):
-                x = layer(x)
-            else:
-                x = layer(x)  # Handles Dropout
-
-        return self.output_layer(x)
-
-
-    def forward(self, x):
-        assert self.embeds is None, "for training with embedding use .embed_forward"
-
-        for layer in self.layers:
-            if isinstance(layer, nn.Linear):
-                x = self.activation(layer(x))
-            elif isinstance(layer, DiscontinuityDense):
-                x = layer(x)
-            else:
-                x = layer(x)  # Handles Dropout
-
-        return self.output_layer(x)
+        return self.model(x)
 
 
 
 
 class MLP(nn.Module):
-    def __init__(self,
-                 activation,
-                 depth:int,
-                 input_dim:int,
-                 output_dim:int,
-                 n_units:int,
-                 embd_size = None,
-                 n_cat = None,
-                 dropout = None):
+    def __init__(self, input_dim, output_dim, hidden_units, depth, activation=nn.ReLU,
+                 regularize=None, embd_size=None, n_cat=None):
         super(MLP, self).__init__()
-        assert (embd_size is None) or (embd_size is not None and isinstance(n_cat, int)), "n_cat must be an integer if embd_size is not None"
-        assert depth >= 2, "depth cannot be lower than 2"
 
+        layers = []
+        self.embeds = None
 
-        self.activation = activation  # PyTorch activation function like nn.ReLU()
-
-        if embd_size:
+        # Add embedding layer if embd_size and n_cat are provided
+        if embd_size is not None and n_cat is not None:
             self.embeds = nn.Embedding(n_cat, embd_size)
+            input_dim = input_dim - n_cat + embd_size  # Adjust input dimensions
+
+        # Input layer
+        layers.append(nn.Linear(input_dim, hidden_units))
+
+        if regularize == 'bn':
+            layers.append(nn.BatchNorm1d(hidden_units))
+        elif regularize is not None and 0 < regularize < 1:
+            layers.append(nn.Dropout(regularize))
+
+        layers.append(activation())
+
+        # Hidden layers
+        for _ in range(depth - 1):
+            layers.append(nn.Linear(hidden_units, hidden_units))
+
+            if regularize == 'bn':
+                layers.append(nn.BatchNorm1d(hidden_units))
+            elif regularize is not None and 0 < regularize < 1:
+                layers.append(nn.Dropout(regularize))
+
+            layers.append(activation())
+
+        # Output layer
+        layers.append(nn.Linear(hidden_units, output_dim))
+
+        self.model = nn.Sequential(*layers)
+
+    def forward(self, x_cont, x_cat=None):
+        if self.embeds is not None and x_cat is not None:
+            x_cat = self.embeds(x_cat)
+            x = torch.cat([x_cont, x_cat], dim=1)
+        elif x_cat is not None:
+            x = torch.cat([x_cont, x_cat], dim=1)
         else:
-            self.embeds = None
+            x = x_cont
 
-
-        if self.embeds is not None:
-            self.layers = nn.ModuleList([nn.Linear(input_dim - n_cat + embd_size, n_units)])
-            last_layer_dim = n_units
-
-            if dropout is not None:
-                self.layers.append(nn.Dropout(dropout))
-
-        else:
-            self.layers = nn.ModuleList([nn.Linear(input_dim, n_units)])
-            last_layer_dim = n_units
-
-            if dropout is not None:
-                self.layers.append(nn.Dropout(dropout))
-
-
-        for i in range(depth - 2):
-            self.layers.append(nn.Linear(n_units, n_units))
-
-            if dropout is not None:
-                self.layers.append(nn.Dropout(dropout))
-
-
-        self.output_layer = nn.Linear(n_units, output_dim)
-
-
-    def embed_forward(self, x_cont, x_cat):
-        assert self.embeds is not None, "for non_embedded output, use forward()"
-
-        x_cat_embed = self.embeds(x_cat)
-        x = torch.cat([x_cont, x_cat_embed], dim=1)
-
-        for layer in self.layers:
-            if isinstance(layer, nn.Linear):
-                x = self.activation(layer(x))
-            else:
-                x = layer(x)  # Handles Dropout
-
-        return self.output_layer(x)
-
-    def forward(self, x):
-        assert self.embeds is None, "for training with embedding use .embed_forward"
-
-        for layer in self.layers:
-            if isinstance(layer, nn.Linear):
-                x = self.activation(layer(x))
-            else:
-                x = layer(x)  # Handles Dropout
-
-        return self.output_layer(x)
+        return self.model(x)
