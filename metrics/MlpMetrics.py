@@ -33,7 +33,177 @@ class ConfusionMatrix:
 
 
 
+class MlpMetricsClassification():
+    def __init__(self):
+        pass
 
+    # @timer_decorator
+    def get_loss(self, model, test_loader, hyperparameters, test_set_name=None):
+        if test_set_name:
+            assert isinstance(test_set_name, str), "test_set_name must be a string, such as train, val, test"
+
+
+        no_cuda = hyperparameters['no_cuda']
+        use_cuda = not no_cuda and torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
+
+        with torch.no_grad():
+            model.eval()
+            test_loss = 0
+            dataset_len = 0
+
+            for (data_cont, data_cat, target) in test_loader:
+                dataset_len += len(target)
+                data_cont, data_cat, target = data_cont.to(self.device), data_cat.to(self.device), target.to(self.device)
+
+                target = target.type(torch.cuda.LongTensor)
+
+
+                ###############
+                data_cont.requires_grad = True
+                data_cat.requires_grad = True
+                output = model(data_cont, data_cat)
+                ###############
+
+                target_one_dim = torch.argmax(target, dim=1)
+                test_loss += F.cross_entropy(output, target_one_dim, reduction='sum').item()
+
+            test_loss /= dataset_len
+
+            if test_set_name:
+
+                loss_name = f'{test_set_name}_loss'
+                final_metrics = {loss_name: test_loss}
+            else:
+                final_metrics = {'loss': test_loss}
+
+            return final_metrics
+
+    def get_metrics(self, model, test_loader, hyperparameters, test_set_name=None):
+        if test_set_name:
+            assert isinstance(test_set_name, str), "test_set_name must be a string, such as train, val, test"
+
+        no_cuda = hyperparameters['no_cuda']
+        use_cuda = not no_cuda and torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
+
+        with torch.no_grad():
+            model.eval()
+            # test_loss = 0
+            # dataset_len = 0
+
+            roc_auc_accumulator = BinaryAUROC(num_tasks=2)
+            acc_accumulator = BinaryAUROC()
+            confusion_accumulator = ConfusionMatrix()
+
+            for (data_cont, data_cat, target) in test_loader:
+                #dataset_len += len(target)
+                data_cont, data_cat, target = data_cont.to(self.device), data_cat.to(self.device), target.to(self.device)
+
+                target = target.type(torch.cuda.LongTensor)
+
+
+                ###############
+                data_cont.requires_grad = True
+                data_cat.requires_grad = True
+                output = model(data_cont, data_cat)
+                ###############
+
+                target_one_dim = torch.argmax(target, dim=1)
+                # test_loss += F.cross_entropy(output, target_one_dim, reduction='sum').item()
+                output = torch.softmax(output, dim=-1)
+
+                preds = torch.argmax(output, dim=1).cpu()
+                target_one_dim = target_one_dim.cpu()
+                output = output.cpu()
+
+                roc_auc_accumulator.update(output.t(), target.t())
+                acc_accumulator.update(preds, target_one_dim)
+                confusion_accumulator.update(preds, target_one_dim, num_classes=target.shape[1])
+
+            roc_auc = roc_auc_accumulator.compute().mean().item()
+            accuracy = acc_accumulator.compute().mean().item()
+            confusion_matrix = confusion_accumulator.compute()
+
+            confusion_matrix = [[int(i) for i in row] for row in confusion_matrix.cpu().numpy().tolist()]
+
+            metrics = {
+                'accuracy_score': accuracy,
+                'roc_auc_score': roc_auc,
+                'confusion_matrix': confusion_matrix}
+
+            if test_set_name:
+                assert isinstance(test_set_name, str), "test_set_name must be a string, such as 'train', 'val', 'test'"
+                metrics_name = f'{test_set_name}_metrics'
+                final_metrics = {metrics_name: metrics}
+            else:
+                final_metrics = {'metrics': metrics}
+
+            return final_metrics
+
+    #@timer_decorator
+    def get_all(self, model, test_loader, hyperparameters, test_set_name=None):
+        if test_set_name:
+            assert isinstance(test_set_name, str), "test_set_name must be a string, such as train, val, test"
+
+        no_cuda = hyperparameters['no_cuda']
+        use_cuda = not no_cuda and torch.cuda.is_available()
+        device = torch.device("cuda" if use_cuda else "cpu")
+
+        with torch.no_grad():
+            model.eval()
+            test_loss = 0
+            dataset_len = 0
+
+            roc_auc_accumulator = BinaryAUROC(num_tasks=2)
+            acc_accumulator = BinaryAUROC()
+            confusion_accumulator = ConfusionMatrix()
+
+            for (data_cont, data_cat, target) in test_loader:
+                dataset_len += len(target)
+                data_cont, data_cat, target = data_cont.to(self.device), data_cat.to(self.device), target.to(self.device)
+
+                target = target.type(torch.cuda.LongTensor)
+
+
+                ###############
+                data_cont.requires_grad = True
+                data_cat.requires_grad = True
+                output = model(data_cont, data_cat)
+                ###############
+
+                target_one_dim = torch.argmax(target, dim=1)
+                test_loss += F.cross_entropy(output, target_one_dim, reduction='sum').item()
+                output = torch.softmax(output, dim=-1)
+
+                preds = torch.argmax(output, dim=1).cpu()
+                target_one_dim = target_one_dim.cpu()
+                output = output.cpu()
+
+                roc_auc_accumulator.update(output.t(), target.t())
+                acc_accumulator.update(preds, target_one_dim)
+                confusion_accumulator.update(preds, target_one_dim, num_classes=target.shape[1])
+
+            roc_auc = roc_auc_accumulator.compute().mean().item()
+            accuracy = acc_accumulator.compute().mean().item()
+            confusion_matrix = confusion_accumulator.compute()
+
+            confusion_matrix = [[int(i) for i in row] for row in confusion_matrix.cpu().numpy().tolist()]
+
+            metrics = {
+                'accuracy_score': accuracy,
+                'roc_auc_score': roc_auc,
+                'confusion_matrix': confusion_matrix}
+
+            if test_set_name:
+                assert isinstance(test_set_name, str), "test_set_name must be a string, such as 'train', 'val', 'test'"
+                loss_name = f'{test_set_name}_loss'
+                metrics_name = f'{test_set_name}_metrics'
+                final_metrics = {loss_name: test_loss, metrics_name: metrics}
+            else:
+                final_metrics = {'loss': test_loss, 'metrics': metrics}
+
+            return final_metrics
 
 
 
