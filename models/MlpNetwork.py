@@ -242,7 +242,9 @@ def init_MlpNetwork(depth,
         Activation = nn.PReLU
     else:
         raise ValueError("Unsupported activation function")
-
+        
+    if isinstance(embd_size, str):
+        embd_size = int(np.sqrt(n_cat))
 
 
     use_cuda = not no_cuda and torch.cuda.is_available()
