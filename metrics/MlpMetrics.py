@@ -54,7 +54,7 @@ class MlpMetricsClassification():
 
             for (data_cont, data_cat, target) in test_loader:
                 dataset_len += len(target)
-                data_cont, data_cat, target = data_cont.to(self.device), data_cat.to(self.device), target.to(self.device)
+                data_cont, data_cat, target = data_cont.to(device), data_cat.to(device), target.to(device)
 
                 target = target.type(torch.cuda.LongTensor)
 
@@ -98,7 +98,7 @@ class MlpMetricsClassification():
 
             for (data_cont, data_cat, target) in test_loader:
                 #dataset_len += len(target)
-                data_cont, data_cat, target = data_cont.to(self.device), data_cat.to(self.device), target.to(self.device)
+                data_cont, data_cat, target = data_cont.to(device), data_cat.to(device), target.to(device)
 
                 target = target.type(torch.cuda.LongTensor)
 
@@ -161,7 +161,7 @@ class MlpMetricsClassification():
 
             for (data_cont, data_cat, target) in test_loader:
                 dataset_len += len(target)
-                data_cont, data_cat, target = data_cont.to(self.device), data_cat.to(self.device), target.to(self.device)
+                data_cont, data_cat, target = data_cont.to(device), data_cat.to(device), target.to(device)
 
                 target = target.type(torch.cuda.LongTensor)
 
@@ -235,7 +235,7 @@ class MlpMetricsRegression():
 
             for (data_cont, data_cat, target) in test_loader:
                 dataset_len += len(target)
-                data_cont, data_cat, target = data_cont.to(self.device), data_cat.to(self.device), target.to(self.device)
+                data_cont, data_cat, target = data_cont.to(device), data_cat.to(device), target.to(device)
 
                 target_list.append(target)
 
@@ -306,7 +306,7 @@ class MlpMetricsRegression():
 
             for (data_cont, data_cat, target) in test_loader:
                 dataset_len += len(target)
-                data_cont, data_cat, target = data_cont.to(self.device), data_cat.to(self.device), target.to(self.device)
+                data_cont, data_cat, target = data_cont.to(device), data_cat.to(device), target.to(device)
 
                 target_list.append(target)
 
