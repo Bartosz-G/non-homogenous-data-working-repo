@@ -13,7 +13,7 @@ import torch.nn.functional as F
 class MlpTrainingRoutine():
     def __init__(self, depth,
                  seed,
-                 layer_size,
+                 hidden_dim,
                  regularize,
                  embd_size,
                  optimizer,
@@ -28,7 +28,9 @@ class MlpTrainingRoutine():
                  **kwargs):
         self.depth = depth
         self.seed = seed
-        self.layer_size = layer_size
+        self.hidden_dim = hidden_dim
+        self.regularize = regularize
+        self.embd_size = embd_size
         self.optimizer_str = optimizer
         self.batch_size = batch_size
         self.total_epochs = epochs
