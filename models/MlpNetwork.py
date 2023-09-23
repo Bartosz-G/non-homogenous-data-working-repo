@@ -161,7 +161,7 @@ class DiscontinuousNeuralNetwork(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(self, input_dim, output_dim, hidden_units, depth, activation=nn.ReLU,
+    def __init__(self, depth, input_dim, output_dim, hidden_units, activation=nn.ReLU,
                  regularize=None, embd_size=None, n_cat=None):
         super(MLP, self).__init__()
 
@@ -210,3 +210,43 @@ class MLP(nn.Module):
             x = x_cont
 
         return self.model(x)
+
+
+
+
+def init_MlpNetwork(depth,
+                    seed,
+                    hidden_dim,
+                    activation,
+                    regularize,
+                    embd_size,
+                    optimizer,
+                    batch_size,
+                    epochs,
+                    lr,
+                    momentum,
+                    no_cuda,
+                    lr_step_size,
+                    gamma,
+                    task, input_dim, output_dim, n_cat):
+
+    if activation.casefold() == 'relu':
+        Activation = nn.ReLU
+    elif activation.casefold() == 'sigmoid':
+        Activation = nn.Sigmoid
+    elif activation.casefold() == 'tanh':
+        Activation = nn.Tanh
+    elif activation.casefold() == 'leakyrelu':
+        Activation = nn.LeakyReLU
+    elif activation.casefold() == 'prelu':
+        Activation = nn.PReLU
+    else:
+        raise ValueError("Unsupported activation function")
+
+
+
+    use_cuda = not no_cuda and torch.cuda.is_available()
+    device = torch.device("cuda" if use_cuda else "cpu")
+
+    return MLP(depth, input_dim, output_dim, hidden_units = hidden_dim, activation=Activation,
+               regularize=regularize, embd_size=embd_size, n_cat=n_cat).to(device)
