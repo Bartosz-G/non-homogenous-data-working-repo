@@ -147,7 +147,8 @@ class DiscontinuousNeuralNetwork(nn.Module):
 
     def forward(self, x_cont, x_cat=None):
         if self.embeds is not None and x_cat is not None:
-            x_cat = self.embeds(x_cat)
+            if x_cat.shape != (0,):
+                x_cat = self.embeds(x_cat)
             x = torch.cat([x_cont, x_cat], dim=1)
         elif x_cat is not None:
             x = torch.cat([x_cont, x_cat], dim=1)
@@ -200,7 +201,8 @@ class MLP(nn.Module):
 
     def forward(self, x_cont, x_cat=None):
         if self.embeds is not None and x_cat is not None:
-            x_cat = self.embeds(x_cat)
+            if x_cat.shape != (0,):
+                x_cat = self.embeds(x_cat)
             x = torch.cat([x_cont, x_cat], dim=1)
         elif x_cat is not None:
             x = torch.cat([x_cont, x_cat], dim=1)
