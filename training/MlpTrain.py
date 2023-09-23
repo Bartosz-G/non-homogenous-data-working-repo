@@ -52,7 +52,7 @@ class MlpTrainingRoutine():
     def set_optimizer_scheduler(self, model):
         if self.optimizer_str == 'SGD':
             self.optimizer = torch.optim.SGD(model.parameters(), lr=self.lr, momentum=self.momentum, nesterov=True)
-        elif self.optimizer_str == 'AMSGrad':
+        elif self.optimizer_str == 'Adam':
             self.optimizer = torch.optim.Adam(model.parameters(), lr=self.lr, amsgrad=True)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=self.lr_step_size, gamma=self.gamma)
 
