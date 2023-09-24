@@ -150,6 +150,7 @@ class DiscontinuousNeuralNetwork(nn.Module):
             if x_cat.shape != (0,):
                 x_cat = x_cat.long()
                 x_cat = self.embeds(x_cat)
+                x_cat = torch.mean(x_cat, dim=1)
             x = torch.cat([x_cont, x_cat], dim=1)
         elif x_cat is not None or x_cont.shape == (0,):
             x = torch.cat([x_cont, x_cat], dim=1)
@@ -205,7 +206,7 @@ class MLP(nn.Module):
             if x_cat.shape != (0,):
                 x_cat = x_cat.long()
                 x_cat = self.embeds(x_cat)
-                x_cat = x_cat.squeeze(1)
+                x_cat = torch.mean(x_cat, dim=1)
             x = torch.cat([x_cont, x_cat], dim=1)
         elif x_cat is not None or x_cont.shape == (0,):
             x = torch.cat([x_cont, x_cat], dim=1)
