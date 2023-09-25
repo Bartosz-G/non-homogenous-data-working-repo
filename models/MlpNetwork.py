@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 
 
 def pytorch_heaviside(tensor, dtype=torch.float32):
@@ -216,6 +217,12 @@ class MLP(nn.Module):
         return self.model(x)
 
 
+    
+def init_weights(m):
+    if type(m) == nn.Linear:
+        nn.init.xavier_uniform_(m.weight)
+        m.bias.data.fill_(0.01)
+    
 
 
 def init_MlpNetwork(depth,
@@ -254,5 +261,9 @@ def init_MlpNetwork(depth,
     use_cuda = not no_cuda and torch.cuda.is_available()
     device = torch.device("cuda" if use_cuda else "cpu")
 
-    return MLP(depth, input_dim, output_dim, hidden_units = hidden_dim, activation=Activation,
+    model = MLP(depth, input_dim, output_dim, hidden_units = hidden_dim, activation=Activation,
                regularize=regularize, embd_size=embd_size, n_cat=n_cat).to(device)
+
+    model.apply(init_weights)
+
+    return model
