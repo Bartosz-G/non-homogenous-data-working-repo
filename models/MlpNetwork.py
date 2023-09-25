@@ -222,6 +222,8 @@ def init_weights(m):
     if type(m) == nn.Linear:
         nn.init.xavier_uniform_(m.weight)
         m.bias.data.fill_(0.01)
+    elif type(m) == nn.Embedding:
+        nn.init.normal_(m.weight.data, mean=0, std=0.1)
     
 
 
