@@ -247,7 +247,7 @@ class MlpMetricsRegression():
 
                 standard_errors = ((output - target) ** 2)
                 standard_errors_list.append(standard_errors)
-                test_loss += ((output - target) ** 2).mean().item() * len(target)
+                test_loss += standard_errors.mean().item() * len(target)
 
             test_loss /= dataset_len
 
@@ -318,7 +318,7 @@ class MlpMetricsRegression():
 
                 standard_errors = ((output - target) ** 2)
                 standard_errors_list.append(standard_errors)
-                test_loss += ((output - target) ** 2).mean().item() * len(target)
+                test_loss += standard_errors.mean().item() * len(target)
 
             test_loss /= dataset_len
 
