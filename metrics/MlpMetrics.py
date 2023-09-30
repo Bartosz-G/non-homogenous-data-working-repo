@@ -6,6 +6,7 @@ import time
 
 from torcheval.metrics import BinaryAUROC
 from torcheval.metrics import BinaryAccuracy
+from torcheval.metrics import R2Score
 
 
 class ConfusionMatrix:
@@ -59,9 +60,9 @@ class MlpMetricsClassification():
                 target = target.type(torch.cuda.LongTensor)
 
 
-                ###############
-                data_cont.requires_grad = True
-                data_cat.requires_grad = True
+                # ###############
+                # data_cont.requires_grad = True
+                # data_cat.requires_grad = True
                 output = model(data_cont, data_cat)
                 ###############
 
@@ -104,8 +105,8 @@ class MlpMetricsClassification():
 
 
                 ###############
-                data_cont.requires_grad = True
-                data_cat.requires_grad = True
+                # data_cont.requires_grad = True
+                # data_cat.requires_grad = True
                 output = model(data_cont, data_cat)
                 ###############
 
@@ -167,8 +168,8 @@ class MlpMetricsClassification():
 
 
                 ###############
-                data_cont.requires_grad = True
-                data_cat.requires_grad = True
+                # data_cont.requires_grad = True
+                # data_cat.requires_grad = True
                 output = model(data_cont, data_cat)
                 ###############
 
@@ -231,6 +232,7 @@ class MlpMetricsRegression():
             dataset_len = 0
             standard_errors_list = []
             target_list = []
+            # r2_accumulator = R2Score()
 
 
             for (data_cont, data_cat, target) in test_loader:
@@ -240,14 +242,15 @@ class MlpMetricsRegression():
                 target_list.append(target)
 
                 ###############
-                data_cont.requires_grad = True
-                data_cat.requires_grad = True
+                # data_cont.requires_grad = True
+                # data_cat.requires_grad = True
                 output = model(data_cont, data_cat)
                 ###############
 
                 standard_errors = ((output - target) ** 2)
                 standard_errors_list.append(standard_errors)
                 test_loss += standard_errors.mean().item() * len(target)
+                # r2_accumulator.update(output, target)
 
             test_loss /= dataset_len
 
@@ -262,6 +265,7 @@ class MlpMetricsRegression():
             target_mean = torch.mean(all_targets)
             ss_tot = torch.sum((all_targets - target_mean) ** 2)
             r2_score = 1 - (ss_res / ss_tot)
+            # r2_score = r2_accumulator.compute()
 
             RMSE = float(np.sqrt(test_loss))
 
@@ -303,6 +307,7 @@ class MlpMetricsRegression():
             dataset_len = 0
             standard_errors_list = []
             target_list = []
+            # r2_accumulator = R2Score()
 
             for (data_cont, data_cat, target) in test_loader:
                 dataset_len += len(target)
@@ -311,14 +316,15 @@ class MlpMetricsRegression():
                 target_list.append(target)
 
                 ###############
-                data_cont.requires_grad = True
-                data_cat.requires_grad = True
+                # data_cont.requires_grad = True
+                # data_cat.requires_grad = True
                 output = model(data_cont, data_cat)
                 ###############
 
                 standard_errors = ((output - target) ** 2)
                 standard_errors_list.append(standard_errors)
                 test_loss += standard_errors.mean().item() * len(target)
+                # r2_accumulator.update(output, target)
 
             test_loss /= dataset_len
 
@@ -333,6 +339,7 @@ class MlpMetricsRegression():
             target_mean = torch.mean(all_targets)
             ss_tot = torch.sum((all_targets - target_mean) ** 2)
             r2_score = 1 - (ss_res / ss_tot)
+            # r2_score = r2_accumulator.compute()
 
             RMSE = float(np.sqrt(test_loss))
 
