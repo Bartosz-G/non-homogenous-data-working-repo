@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import ast
+import seaborn as sns
+import matplotlib.pyplot as plt
 from typing import List, Optional
 
 def get_dataset(df: pd.DataFrame, group) -> pd.DataFrame:
@@ -108,3 +110,66 @@ def get_top_models(df: pd.DataFrame, target_column: str, top: int = 1, highest: 
     top_df = df.groupby(['dataset', 'model']).head(top)
 
     return top_df
+
+
+def plot_per_model_metrics(df, metric, jitter=False):
+    # Create the plot
+    sns.stripplot(data=df, x='model', y=metric, hue='model', jitter=jitter, dodge=True)
+
+    # Add labels and title
+    plt.xlabel('Model')
+    plt.ylabel(metric)
+    plt.title(f'{metric} by Model')
+    plt.xticks(rotation=45)
+    plt.ylim([0, 1])
+
+    # Add a legend
+    plt.legend(title='Model', bbox_to_anchor=(1.05, 1), loc='upper left')
+
+    # Show the plot
+    plt.show()
+
+
+
+
+def clean_model_names(df: pd.DataFrame) -> pd.DataFrame:
+    df['model'] = df['model'].str.replace(r'(Mlp_\w+)(_cat|_cont)$', r'\1', regex=True)
+    df['model'] = df['model'].str.replace(r'(_cls|_reg|_class)$', '', regex=True)
+    return df
+
+
+
+def pivot_per_dataset(df: pd.DataFrame, results_column: str) -> pd.DataFrame:
+    pivot_df = pd.pivot_table(df,
+                              values=results_column,
+                              index='model',
+                              columns='dataset',
+                              aggfunc=list, # Since you have multiple 'top' values, aggregate them into a list
+                              fill_value=None)
+
+    # Flatten the multi-index (if any) and reset the index for the DataFrame
+    pivot_df.columns = [col if not isinstance(col, tuple) else '_'.join(col) for col in pivot_df.columns]
+    pivot_df.reset_index(inplace=True)
+
+    return pivot_df
+
+
+def plot_per_datasets(df: pd.DataFrame, datasets: List[str]) -> None:
+    # Melt the DataFrame for seaborn
+    melted_df = df.melt(id_vars='model', value_vars=datasets)
+
+    # Create the plot
+    plt.figure(figsize=(12, 8))
+    sns.stripplot(x='model', y='value', hue='variable', data=melted_df, jitter=True, dodge=True)
+
+    plt.xlabel('Model')
+    plt.ylabel('Metric Value')
+    plt.legend(title='Dataset')
+
+    # Scale Y-axis
+    plt.ylim(0, 1)
+
+    # Rotate X-axis labels for better visibility
+    plt.xticks(rotation=90)
+
+    plt.show()
