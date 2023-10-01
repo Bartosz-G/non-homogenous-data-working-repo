@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from typing import List, Optional
 
 def get_dataset(df: pd.DataFrame, group) -> pd.DataFrame:
     filtered_df = df[df['dataset'].isin(group)]
@@ -67,11 +68,19 @@ def get_groups():
                                         '334-361286']}
 
 
-def flatten_results(df) -> pd.DataFrame:
-    # Flatten the 'hyperparameters' and 'metrics' dictionaries
+def flatten_results(df: pd.DataFrame, omit: Optional[List[str]] = None) -> pd.DataFrame:
+    if omit is None:
+        omit = []
+
+    # Flatten the DataFrame
     flat_df = pd.json_normalize(df.to_dict(orient='records'))
 
+    # Rename the columns to remove prefixes
     flat_df.columns = flat_df.columns.str.replace('hyperparameters\.', '', regex=False)
     flat_df.columns = flat_df.columns.str.replace('metrics\.', '', regex=False)
+
+    # Keep the original columns that are in 'omit'
+    for col in omit:
+        flat_df[col] = df[col]
 
     return flat_df
