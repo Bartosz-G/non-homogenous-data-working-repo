@@ -96,3 +96,15 @@ def flatten_results(df: pd.DataFrame, flatten: Optional[List[str]] = None) -> pd
             data_return = pd.concat([data_return, flattened_df], axis=1)
 
     return data_return
+
+
+
+def get_top_models(df: pd.DataFrame, target_column: str, top: int = 1, highest: bool = True) -> pd.DataFrame:
+    # Sort the DataFrame based on the target_column and the 'highest' parameter
+    sort_order = target_column if highest else [target_column, 'dataset', 'model']
+    df = df.sort_values(by=sort_order, ascending=not highest)
+
+    # Group by 'dataset' and 'model', then select the top rows
+    top_df = df.groupby(['dataset', 'model']).head(top)
+
+    return top_df
