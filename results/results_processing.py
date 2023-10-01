@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import ast
 from typing import List, Optional
 
 def get_dataset(df: pd.DataFrame, group) -> pd.DataFrame:
@@ -68,19 +69,30 @@ def get_groups():
                                         '334-361286']}
 
 
-def flatten_results(df: pd.DataFrame, omit: Optional[List[str]] = None) -> pd.DataFrame:
-    if omit is None:
-        omit = []
+def flatten_results(df: pd.DataFrame, flatten: Optional[List[str]] = None) -> pd.DataFrame:
+    if flatten is None:
+        return df
 
-    # Flatten the DataFrame
-    flat_df = pd.json_normalize(df.to_dict(orient='records'))
+    all_cols = df.columns.tolist()
+    cols_to_include = list(set(all_cols) - set(flatten))
 
-    # Rename the columns to remove prefixes
-    flat_df.columns = flat_df.columns.str.replace('hyperparameters\.', '', regex=False)
-    flat_df.columns = flat_df.columns.str.replace('metrics\.', '', regex=False)
+    data_return = df[cols_to_include].copy()
 
-    # Keep the original columns that are in 'omit'
-    for col in omit:
-        flat_df[col] = df[col]
+    for column in flatten:
+        # Convert string representation of dictionary back to dictionary
+        df[column] = df[column].apply(lambda x: ast.literal_eval(x) if isinstance(x, str) else x)
 
-    return flat_df
+        # Extract the list of dictionaries for the current column, filtering out non-dict types
+        data_list = [x for x in df[column].tolist() if isinstance(x, dict)]
+
+        # Flatten the list of dictionaries into a DataFrame
+        if data_list:
+            flattened_df = pd.json_normalize(data_list, max_level=1)
+
+            # Ensure the index matches before concatenating
+            flattened_df.index = data_return.index[:len(flattened_df)]
+
+            # Concatenate the original DataFrame and the flattened DataFrame column-wise
+            data_return = pd.concat([data_return, flattened_df], axis=1)
+
+    return data_return
