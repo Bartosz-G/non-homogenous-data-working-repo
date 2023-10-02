@@ -120,7 +120,11 @@ def plot_per_model_metrics(df, metric, jitter=False):
     plt.xlabel('Model')
     plt.ylabel(metric)
     plt.title(f'{metric} by Model')
+
+    # Rotate x-axis labels for better visibility
     plt.xticks(rotation=45)
+
+    # Set the Y-axis limits
     plt.ylim([0, 1])
 
     # Add a legend
@@ -163,7 +167,7 @@ def pivot_per_dataset(df: pd.DataFrame, results_column: str) -> pd.DataFrame:
 
 
 
-def plot_per_datasets(df: pd.DataFrame, datasets: List[str]) -> None:
+def plot_per_datasets(df: pd.DataFrame, datasets: List[str], scale: bool = False) -> None:
     # Melt the DataFrame for seaborn
     melted_df = df.melt(id_vars='model', value_vars=datasets)
 
@@ -176,9 +180,25 @@ def plot_per_datasets(df: pd.DataFrame, datasets: List[str]) -> None:
     plt.legend(title='Dataset')
 
     # Scale Y-axis
-    plt.ylim(0, 1)
+    if scale:
+        plt.ylim(0, 1)
 
     # Rotate X-axis labels for better visibility
     plt.xticks(rotation=90)
 
     plt.show()
+
+
+def create_formatted_df(df: pd.DataFrame, highest: bool = True) -> pd.DataFrame:
+    new_df = {}
+
+    for col in df.columns[1:]:  # Skip the 'model' column
+        # Create a list of formatted strings "ModelName(Value)" sorted by value
+        sorted_series = df[[col, 'model']].sort_values(by=col, ascending=not highest)
+        formatted_strings = [f"{row['model']}: {row[col]}" for _, row in sorted_series.iterrows()]
+
+        # Store the formatted strings in the new DataFrame
+        new_df[col] = formatted_strings
+
+    return pd.DataFrame(new_df)
+
