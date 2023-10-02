@@ -140,18 +140,27 @@ def clean_model_names(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def pivot_per_dataset(df: pd.DataFrame, results_column: str) -> pd.DataFrame:
+    # Create a pivot table with lists
     pivot_df = pd.pivot_table(df,
                               values=results_column,
                               index='model',
                               columns='dataset',
-                              aggfunc=list, # Since you have multiple 'top' values, aggregate them into a list
+                              aggfunc=list,
                               fill_value=None)
 
-    # Flatten the multi-index (if any) and reset the index for the DataFrame
+    # Flatten the columns and reset index
     pivot_df.columns = [col if not isinstance(col, tuple) else '_'.join(col) for col in pivot_df.columns]
     pivot_df.reset_index(inplace=True)
 
+    # Explode lists into separate rows
+    for col in pivot_df.columns[1:]:
+        pivot_df = pivot_df.explode(col)
+
+    # Reset the index to keep things tidy
+    pivot_df.reset_index(drop=True, inplace=True)
+
     return pivot_df
+
 
 
 def plot_per_datasets(df: pd.DataFrame, datasets: List[str]) -> None:
@@ -160,7 +169,7 @@ def plot_per_datasets(df: pd.DataFrame, datasets: List[str]) -> None:
 
     # Create the plot
     plt.figure(figsize=(12, 8))
-    sns.stripplot(x='model', y='value', hue='variable', data=melted_df, jitter=True, dodge=True)
+    sns.stripplot(x='model', y='value', hue='variable', data=melted_df, jitter=False, dodge=False)
 
     plt.xlabel('Model')
     plt.ylabel('Metric Value')
