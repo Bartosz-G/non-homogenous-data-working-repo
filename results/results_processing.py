@@ -209,3 +209,10 @@ def create_formatted_df(df: pd.DataFrame, highest: bool = True) -> pd.DataFrame:
 
     return pd.DataFrame(new_df)
 
+
+def add_per_model_means(df: pd.DataFrame) -> pd.DataFrame:
+    columns_to_skip = ['model', 'hyperparameters', 'dataset']
+    actual_columns_to_skip = set(df.columns) & set(columns_to_skip)
+    row_means = df.drop(columns=actual_columns_to_skip).mean(axis=1, skipna=True)
+    df['mean'] = row_means
+    return df
