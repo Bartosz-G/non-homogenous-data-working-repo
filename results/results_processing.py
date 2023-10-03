@@ -101,6 +101,18 @@ def flatten_results(df: pd.DataFrame, flatten: Optional[List[str]] = None) -> pd
 
 
 
+def combine_columns(df: pd.DataFrame) -> pd.DataFrame:
+    for col in df.columns:
+        if col.startswith('val_metrics.'):
+            corresponding_col = col.replace('val_metrics.', 'validate_metrics.')
+            if corresponding_col in df.columns:
+                df[col] = df[col].combine_first(df[corresponding_col])
+
+    # Remove the 'validate_metrics...' columns after combining
+    df.drop(columns=[col for col in df.columns if col.startswith('validate_metrics.')], inplace=True)
+
+    return df
+
 def get_top_models(df: pd.DataFrame, target_column: str, top: int = 1, highest: bool = True) -> pd.DataFrame:
     # Sort the DataFrame based on the target_column and the 'highest' parameter
     df = df.sort_values(by=[target_column], ascending=not highest)
