@@ -103,16 +103,26 @@ def flatten_results(df: pd.DataFrame, flatten: Optional[List[str]] = None) -> pd
 
 def get_top_models(df: pd.DataFrame, target_column: str, top: int = 1, highest: bool = True) -> pd.DataFrame:
     # Sort the DataFrame based on the target_column and the 'highest' parameter
-    sort_order = target_column if highest else [target_column, 'dataset', 'model']
-    df = df.sort_values(by=sort_order, ascending=not highest)
+    df = df.sort_values(by=[target_column], ascending=not highest)
 
-    # Group by 'dataset' and 'model', then select the top rows
-    top_df = df.groupby(['dataset', 'model']).head(top)
+    # Group by 'dataset' and 'model', then select the top rows and average them if top > 1
+    if top > 1:
+        top_df = (
+            df.groupby(['dataset', 'model'])
+            .apply(lambda x: x.nlargest(top, target_column) if highest else x.nsmallest(top, target_column))
+            .reset_index(drop=True)
+            .groupby(['dataset', 'model'])
+            .agg({target_column: 'mean'})
+            .reset_index()
+        )
+    else:
+        top_df = df.groupby(['dataset', 'model']).head(top).reset_index(drop=True)
 
     return top_df
 
 
-def plot_per_model_metrics(df, metric, jitter=False):
+
+def plot_per_model_metrics(df, metric, jitter=False, scale = [0,1]):
     # Create the plot
     sns.stripplot(data=df, x='model', y=metric, hue='model', jitter=jitter, dodge=True)
 
@@ -125,7 +135,8 @@ def plot_per_model_metrics(df, metric, jitter=False):
     plt.xticks(rotation=45)
 
     # Set the Y-axis limits
-    plt.ylim([0, 1])
+    if scale:
+        plt.ylim([0, 1])
 
     # Add a legend
     plt.legend(title='Model', bbox_to_anchor=(1.05, 1), loc='upper left')
