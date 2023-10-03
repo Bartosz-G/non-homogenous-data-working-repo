@@ -106,19 +106,15 @@ def get_top_models(df: pd.DataFrame, target_column: str, top: int = 1, highest: 
     df = df.sort_values(by=[target_column], ascending=not highest)
 
     # Group by 'dataset' and 'model', then select the top rows and average them if top > 1
-    if top > 1:
-        top_df = (
-            df.groupby(['dataset', 'model'])
-            .apply(lambda x: x.nlargest(top, target_column) if highest else x.nsmallest(top, target_column))
-            .reset_index(drop=True)
-            .groupby(['dataset', 'model'])
-            .agg({target_column: 'mean'})
-            .reset_index()
-        )
-    else:
-        top_df = df.groupby(['dataset', 'model']).head(top).reset_index(drop=True)
+    top_df = df.groupby(['dataset', 'model']).head(top).reset_index(drop=True)
 
     return top_df
+
+def average_model_scores(df: pd.DataFrame, column_name: str) -> pd.DataFrame:
+    # Group by 'dataset' and 'model' and average the values in the specified column
+    averaged_df = df.groupby(['dataset', 'model']).agg({column_name: 'mean'}).reset_index()
+
+    return averaged_df
 
 
 
